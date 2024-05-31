@@ -8,7 +8,10 @@
   llvmPackages,
   libllvm,
   yaml-cpp,
+  elfutils,
+  libunwind,
   enableLibcxx ? false,
+  debug ? false,
 }:
 stdenv.mkDerivation {
   name = "clang-uml";
@@ -18,7 +21,10 @@ stdenv.mkDerivation {
     cmake
     pkg-config
     installShellFiles
-  ];
+  ] ++ (if debug then [
+    elfutils
+    libunwind
+  ] else []);
 
   buildInputs = [
     clang
@@ -26,6 +32,8 @@ stdenv.mkDerivation {
     libllvm
     yaml-cpp
   ];
+
+  cmakeFlags = if debug then ["-DCMAKE_BUILD_TYPE=Debug"] else [];
 
   clang = if enableLibcxx then llvmPackages.libcxxClang else llvmPackages.clang;
 
@@ -39,4 +47,7 @@ stdenv.mkDerivation {
     installShellCompletion --bash $src/packaging/autocomplete/clang-uml
     installShellCompletion --zsh $src/packaging/autocomplete/_clang-uml
   '';
+  dontFixup = debug;
+  dontStrip = debug;
+
 }
